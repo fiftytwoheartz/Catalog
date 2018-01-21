@@ -18,6 +18,9 @@ namespace Catalog.Repo {
         Task<Product> ById(
             int productId);
 
+        Task<bool> Update(
+            Product product);
+
     }
 
     public sealed class FakeProductsRepo : IProductsRepo {
@@ -40,6 +43,16 @@ namespace Catalog.Repo {
         public Task<Product> ById(
             int productId) {
             return Task.FromResult(_DB[productId]);
+        }
+
+        public Task<bool> Update(
+            Product product) {
+            if (_DB.ContainsKey(product.ID)) {
+                _DB[product.ID] = product;
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
         }
 
     }
