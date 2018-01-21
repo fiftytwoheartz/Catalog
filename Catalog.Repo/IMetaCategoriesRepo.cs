@@ -25,24 +25,24 @@ namespace Catalog.Repo {
 
     public sealed class FakeMetaCategoriesRepo : IMetaCategoriesRepo {
 
-        private static readonly IDictionary<int, MetaCategory> _db = new Dictionary<int, MetaCategory> {
+        private static readonly IDictionary<int, MetaCategory> _DB = new Dictionary<int, MetaCategory> {
             { 0, new MetaCategory { ID = 0, Description = "Description for metacategory 1.", Title = "MetaCategory 1" } }
         };
 
         public Task<ICollection<MetaCategory>> All() {
-            return Task.FromResult(_db.Values);
+            return Task.FromResult(_DB.Values);
         }
 
         public Task<bool> Register(
             MetaCategory metaCategory) {
-            _db.Add(_db.Count, metaCategory);
+            _DB.Add(_DB.Count, metaCategory);
             return Task.FromResult(true);
         }
 
         public Task<bool> Unregiester(
             int ID) {
-            if (_db.ContainsKey(ID)) {
-                _db.Remove(ID);
+            if (_DB.ContainsKey(ID)) {
+                _DB.Remove(ID);
                 return Task.FromResult(true);
             }
 
@@ -51,7 +51,7 @@ namespace Catalog.Repo {
 
         public Task<MetaCategory> ById(
             int ID) {
-            return Task.FromResult(_db[ID]);
+            return Task.FromResult(_DB[ID]);
         }
 
     }
