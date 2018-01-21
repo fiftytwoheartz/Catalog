@@ -5,7 +5,7 @@ using Catalog.Models;
 
 namespace Catalog.Repo {
 
-    public interface ProductsRepo {
+    public interface IProductsRepo {
 
         Task<IList<Product>> AllByMetacategory(
             int metaCategoryID);

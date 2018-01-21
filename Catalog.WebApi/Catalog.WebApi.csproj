@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\CategoriesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -101,8 +102,16 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Controllers\" />
-    <Folder Include="Models\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Catalog.Models\Catalog.Models.csproj">
+      <Project>{1EF53A67-A5B9-4717-8055-85122F30C2B2}</Project>
+      <Name>Catalog.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Catalog.Repo\Catalog.Repo.csproj">
+      <Project>{4370EBFC-B6D7-4B9E-A483-0926C5DD6B28}</Project>
+      <Name>Catalog.Repo</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

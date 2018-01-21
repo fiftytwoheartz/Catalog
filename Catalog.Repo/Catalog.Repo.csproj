@@ -40,8 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MetaCategoriesRepo.cs" />
-    <Compile Include="ProductsRepo.cs" />
+    <Compile Include="IMetaCategoriesRepo.cs" />
+    <Compile Include="IProductsRepo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
