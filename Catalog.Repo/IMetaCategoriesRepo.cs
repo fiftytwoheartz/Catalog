@@ -1,59 +1,72 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using Catalog.Models;
 
-namespace Catalog.Repo {
+namespace Catalog.Repo
+{
+	public interface IMetaCategoriesRepo
+	{
+		Task<ResponseBuilder> All();
 
-    public interface IMetaCategoriesRepo {
+		Task<ResponseBuilder> Register(MetaCategory metaCategory);
 
-        Task<ICollection<MetaCategory>> All();
+		Task<ResponseBuilder> Unregiester(int ID);
 
-        Task<bool> Register(
-            MetaCategory metaCategory);
+		Task<ResponseBuilder> ById(int ID);
+	}
 
-        Task<bool> Unregiester(
-            int ID);
+	public sealed class FakeMetaCategoriesRepo : IMetaCategoriesRepo
+	{
+		private static readonly IDictionary<int, MetaCategory> _DB =
+			new Dictionary<int, MetaCategory>
+				{
+					{
+						0,
+						new MetaCategory
+							{
+								ID = 0,
+								Description = "Description for metacategory 1.",
+								Title = "MetaCategory 1"
+							}
+					}
+				};
 
-        Task<MetaCategory> ById(
-            int ID);
+		public Task<ResponseBuilder> All()
+		{
+			return Task.FromResult(_DB.Values.Success());
+		}
 
-    }
+		public Task<ResponseBuilder> Register(MetaCategory metaCategory)
+		{
+			_DB.Add(_DB.Count, metaCategory);
+			return Task.FromResult($"'{metaCategory.Title}' registered successfully.".Success());
+		}
 
-    public sealed class FakeMetaCategoriesRepo : IMetaCategoriesRepo {
+		public Task<ResponseBuilder> Unregiester(int ID)
+		{
+			if (_DB.ContainsKey(ID))
+			{
+				var toBeRemovedItem = _DB[ID];
+				_DB.Remove(ID);
+				return Task.FromResult($"'{toBeRemovedItem.Title}' removed successfully.".Success());
+			}
 
-        private static readonly IDictionary<int, MetaCategory> _DB = new Dictionary<int, MetaCategory> {
-            { 0, new MetaCategory { ID = 0, Description = "Description for metacategory 1.", Title = "MetaCategory 1" } }
-        };
+			return Task.FromResult($"MetaCategory with ID={ID} does not exist.".Failure());
+		}
 
-        public Task<ICollection<MetaCategory>> All() {
-            return Task.FromResult(_DB.Values);
-        }
-
-        public Task<bool> Register(
-            MetaCategory metaCategory) {
-            _DB.Add(_DB.Count, metaCategory);
-            return Task.FromResult(true);
-        }
-
-        public Task<bool> Unregiester(
-            int ID) {
-            if (_DB.ContainsKey(ID)) {
-                _DB.Remove(ID);
-                return Task.FromResult(true);
-            }
-
-            return Task.FromResult(false);
-        }
-
-        public Task<MetaCategory> ById(
-            int ID) {
-            return Task.FromResult(_DB[ID]);
-        }
-
-    }
-
+		public Task<ResponseBuilder> ById(int ID)
+		{
+			return TryCatchHelper.TryCatchAsync(
+				() => Task.FromResult(_DB[ID].Success()),
+				new Dictionary<Type, Func<Exception, string>>
+					{
+						{
+							typeof(KeyNotFoundException),
+							exception => $"MetaCategory with ID={ID} does not exist."
+						}
+					});
+		}
+	}
 }
