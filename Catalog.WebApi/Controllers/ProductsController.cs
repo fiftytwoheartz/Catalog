@@ -19,17 +19,25 @@ namespace Catalog.WebApi.Controllers {
 		{
 			return Json(
 				(await _PRODUCTS_REPO.AllByMetaCategory(metaCategoryID))
-				.HintsBasedOnData<Product>(product => new Hint(HttpVerb.GET, "See product details.", $"api/products/{product.ID}"))
+				.HintsBasedOnData<Product>(SeeProductDetailsHintMaker)
 				.Build());
 		}
 
-		[HttpGet]
+	    private static Hint SeeProductDetailsHintMaker(Product product)
+	    {
+		    return new Hint(HttpVerb.GET, $"See product (ID={product.ID}) details.", $"api/products/{product.ID}");
+	    }
+		
+	    [HttpGet]
 		[Route("api/products/ofmetacategory/{metaCategoryID}/ofproductkind/{productKindID}")]
 		public async Task<JsonResult<Response>> OfCategoryAndProductType(
 			int metaCategoryID,
 			int productKindID)
 		{
-			return Json((await _PRODUCTS_REPO.AllByMetaCategoryAndProductKind(metaCategoryID, productKindID)).Build());
+			return Json(
+				(await _PRODUCTS_REPO.AllByMetaCategoryAndProductKind(metaCategoryID, productKindID))
+				.HintsBasedOnData<Product>(SeeProductDetailsHintMaker)
+				.Build());
 		}
 
 		[HttpGet]
@@ -37,7 +45,10 @@ namespace Catalog.WebApi.Controllers {
 		public async Task<JsonResult<Response>> ByID(
 			int productID)
 		{
-			return Json((await _PRODUCTS_REPO.ById(productID)).Success().Build());
+			return Json(
+				(await _PRODUCTS_REPO.ById(productID))
+				.HintsBasedOnData<Product>(SeeProductDetailsHintMaker)
+				.Build());
 		}
 
 		[HttpGet]
@@ -46,7 +57,10 @@ namespace Catalog.WebApi.Controllers {
             [FromUri] int productID,
             [FromBody] Product product) {
             product.ID = productID;
-			return Json((await _PRODUCTS_REPO.Update(product)).Build());
+			return Json(
+				(await _PRODUCTS_REPO.Update(product))
+				.HintsBasedOnData<Product>(SeeProductDetailsHintMaker)
+				.Build());
 		}
 
     }

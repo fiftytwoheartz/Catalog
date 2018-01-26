@@ -37,11 +37,19 @@ namespace Catalog.Repo
 
 		public override ResponseBuilder HintsBasedOnData<TData>(Func<TData, Hint> pattern)
 		{
-			return TryGenerateHintIntermediateFromPattern(_data, pattern) // if _data is Enumerable itself
-				       ? TryGenerateHintIntermediateFromPattern(Enumerable.Repeat(_data, 1), pattern) // forcing non-Enumerable to became one
-					         ? this
-					         : this
-				       : this;
+			if (TryGenerateHintIntermediateFromPattern(_data, pattern))
+			{
+				return this;
+			}
+
+			if (TryGenerateHintIntermediateFromPattern(Enumerable.Repeat(_data, 1), pattern))
+			{
+				return this;
+			}
+
+#if DEBUG
+			throw new InvalidOperationException($"Failed to apply pattern ({typeof(TData).Name} -> {typeof(Hint).Namespace}).");
+#endif
 		}
 
 		private bool TryGenerateHintIntermediateFromPattern<TData>(object data, Func<TData, Hint> pattern)
