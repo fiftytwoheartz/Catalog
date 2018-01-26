@@ -3,5 +3,14 @@
     ViewBag.Title = "Index";
 }
 
-<h2>Index</h2>
+<h2>Администирование</h2>
 
+<button data-toggle="collapse" data-target="#metacategories-management" class="btn btn-link">Управление мета-категориями</button>
+<div id="metacategories-management" class="collapse">
+        <button data-toggle="collapse" data-target="#metacategories-management-create" class="btn btn-link">Создать новую мета-категорию</button>
+        <div id="metacategories-management-create" class="collapse">
+            <p>
+                Создание новой мета-категории.
+            </p>
+        </div>
+</div>
