@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Catalog.Repo
 {
@@ -14,6 +15,11 @@ namespace Catalog.Repo
 		public override Response Build()
 		{
 			return new FailedResponse(ErrorMessage, _hints.Where(hint => hint.StaysForFailure).Select(hint => hint.Build()));
+		}
+
+		public override ResponseBuilder HintsBasedOnData<TData>(Func<TData, Hint> pattern)
+		{
+			return this;
 		}
 	}
 }

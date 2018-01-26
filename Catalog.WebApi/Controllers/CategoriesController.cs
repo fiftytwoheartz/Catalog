@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Results;
@@ -21,19 +22,19 @@ namespace Catalog.WebApi.Controllers
 		{
 			return Json(
 				(await _META_CATEGORIES_REPO.ById(id))
-				.Hint(ProductsOfMetacategoryHint(id))
+				.Hint(ProductsOfMetaCategoryHint(id))
 				.Build());
 		}
 
-		private static HintIntermediate ProductsOfMetacategoryHint(int id)
+		private static HintIntermediate ProductsOfMetaCategoryHint(int id)
 		{
-			return new HintIntermediate(true, false, "Products of this metacategory:", $"api/categories/{id}/products");
+			return new HintIntermediate(true, false, HttpVerb.GET, "See all the products associated with this meta-category.", $"api/categories/{id}/products");
 		}
 
 		public async Task<JsonResult<Response>> Post([FromBody]MetaCategory metaCategory) {
 			return Json(
 				(await _META_CATEGORIES_REPO.Register(metaCategory))
-				.Hint(ProductsOfMetacategoryHint(metaCategory.ID))
+				.Hint(ProductsOfMetaCategoryHint(metaCategory.ID))
 				.Build());
         }
 
