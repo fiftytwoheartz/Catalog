@@ -8,17 +8,16 @@ namespace Catalog.Repo {
 
     public interface IProductsRepo {
 
-        Task<IEnumerable<Product>> AllByMetaCategory(
-            int metaCategoryID);
+        Task<ResponseBuilder> AllByMetaCategory(int metaCategoryID);
 
-        Task<IEnumerable<Product>> AllByMetacategoryAndProductKind(
+        Task<ResponseBuilder> AllByMetaCategoryAndProductKind(
             int metaCategoryID,
             int productKindID);
 
-        Task<Product> ById(
+        Task<ResponseBuilder> ById(
             int productId);
 
-        Task<bool> Update(
+        Task<ResponseBuilder> Update(
             Product product);
 
     }
@@ -29,30 +28,46 @@ namespace Catalog.Repo {
             {0, new Product {MetaCategoryID = 0, ID = 0, ProductKindID = 0, Title = "Product 0 title", FullDescription = "Full description of the product.", PriceInUSD = 150.50m, ShortDescription = "Short descroption of the product.", UniqueIdentifier = "P-0000"}}
         };
 
-        public Task<IEnumerable<Product>> AllByMetaCategory(
-            int metaCategoryID) {
-            return Task.FromResult(_DB.Values.Where(product => product.MetaCategoryID == metaCategoryID));
-        }
+        public Task<ResponseBuilder> AllByMetaCategory(
+            int metaCategoryID)
+		{
+			var res = WhereBelongsToMetaCategory(metaCategoryID);
+			return Task.FromResult(res.Any() ? res.Success() : NoProductsMatchGivenCriteria());
+		}
 
-        public async Task<IEnumerable<Product>> AllByMetacategoryAndProductKind(
-            int metaCategoryID,
-            int productKindID) {
-            return (await AllByMetaCategory(metaCategoryID)).Where(product => product.ProductKindID == productKindID);
-        }
+		private static ResponseBuilder NoProductsMatchGivenCriteria()
+		{
+			return "Not products match given criteria.".Failure();
+		}
 
-        public Task<Product> ById(
-            int productId) {
-            return Task.FromResult(_DB[productId]);
-        }
+		private static IEnumerable<Product> WhereBelongsToMetaCategory(int metaCategoryID)
+		{
+			return _DB.Values.Where(product => product.MetaCategoryID == metaCategoryID);
+		}
 
-        public Task<bool> Update(
+		public Task<ResponseBuilder> AllByMetaCategoryAndProductKind(int metaCategoryID, int productKindID)
+		{
+			var res = WhereBelongsToMetaCategory(metaCategoryID).Where(product => product.ProductKindID == productKindID);
+			return Task.FromResult(res.Any() ? res.Success() : NoProductsMatchGivenCriteria());
+		}
+
+	    public Task<ResponseBuilder> ById(
+            int productId)
+		{
+			return Task.FromResult(
+				_DB.ContainsKey(productId)
+					? _DB[productId].Success()
+					: ProductDoesNotExistFailure(productId));
+		}
+
+		private static ResponseBuilder ProductDoesNotExistFailure(int productId)
+		{
+			return $"Product with ID={productId} does not exist.".Failure();
+		}
+
+		public Task<ResponseBuilder> Update(
             Product product) {
-            if (_DB.ContainsKey(product.ID)) {
-                _DB[product.ID] = product;
-                return Task.FromResult(true);
-            }
-
-            return Task.FromResult(false);
+            return Task.FromResult(_DB.ContainsKey(product.ID) ? true.Success() : ProductDoesNotExistFailure(product.ID));
         }
 
     }
