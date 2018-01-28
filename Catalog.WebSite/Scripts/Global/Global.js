@@ -32,43 +32,55 @@ function showFailure() {
 }
 
 /* WEB API */
-function createMessageBuilder(title, body) {
-    return function () { return { title: title, body: body }; };
+function createMsg(title, body) {
+    return { title: title, body: body };
 }
-
-function createDefaultErrorMessageBuilder() {
-    return function () { return { title: 'Ошибка! ;(', body: 'Что-то пошло не так...' }; };
-}
-
-function curryHostAndRelativeUrl(host, relativeURL) {
-    //return function () {
-        return function (optionalParameters, httpVerb, data, success, failure) {
-            $.ajax({
-                url: host + relativeURL + optionalParameters,
-                type: httpVerb,
-                data: data,
-                success: function (result) {
-                    if (result.Success) {
+var defaultSuccessMsg = createMsg('Успех!', 'Все прошло хорошо, можно продолжать работу.');
+var defaultFailureMsg = createMsg('Ошибка! ;(', 'Что-то пошло не так...');
+function curryHostAndHttpVerb(hostUrl, httpVerb) {
+    return function (relativeUrl, data, success, failure) {
+        $.ajax({
+            url: hostUrl + relativeUrl,
+            type: httpVerb,
+            data: data,
+            success: function (result) {
+                if (result.Success) {
+                    if (success != null && success.messageBuilder != null) {
                         showSuccess(success.messageBuilder(result.Data));
-                        if (success.callback != null) {
-                            success.callback(result.Data);
-                        }
+                    } else {
+                        showSuccess(defaultSuccessMsg);
                     }
-                    else {
+
+                    if (success != null && success.callback != null) {
+                        success.callback(result.Data);
+                    }
+                }
+                else {
+                    if (failure != null && failure.messageBuilder != null) {
                         showFailure(failure.messageBuilder(result.Data));
+                    } else {
+                        showFailure(defaultFailureMsg);
+                    }
+
+                    if (failure != null && failure.callback != null) {
                         failure.callback(result.Data);
                     }
-                },
-                failure: function () {
-                    showFailure(createDefaultErrorMessageBuilder());
                 }
-            });
-        //};
+            },
+            failure: function () {
+                showFailure(defaultFailureMsg);
+            }
+        });
+
+        return createAjaxMonad(hostUrl);
     };
 }
 
-function curryHost(host) {
-    return function (relativeUrl) {
-        return curryHostAndRelativeUrl(host, relativeUrl);
+function createAjaxMonad(hostUrl) {
+    return {
+        post: curryHostAndHttpVerb(hostUrl, 'POST'),
+        delete: curryHostAndHttpVerb(hostUrl, 'DELETE')
     };
 }
+
+var ajaxMonad = createAjaxMonad('http://localhost:58798/');

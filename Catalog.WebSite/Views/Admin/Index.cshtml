@@ -50,45 +50,29 @@
     <script>
         var app = angular.module('myApp', []);
         app.controller('myCtrl', function ($scope, $http) {
-            var ajaxRequestMaker = curryHostAndRelativeUrl('http://localhost:58798/', 'api/metacategories/');
             $http
                 .get("http://localhost:58798/api/metacategories/")
                 .then(function (response) {
+
                     $scope.metacategories = response.data.Data;
 
                     $scope.createMetacategory = function () {
-                        ajaxRequestMaker(
-                            "",
-                            'POST',
+                        ajaxMonad.post(
+                            'api/metacategories/',
                             {
                                 Title: $('#metacategory-create-title').val(),
                                 Description: $('#metacategory-create-description').val()
                             },
                             {
                                 messageBuilder: function (result) {
-                                    return {
-                                        title: 'Метакатегория ' + '\"' + result.Title + '\"' + ' успешно сохранена!',
-                                        body: 'Теперь ее смогут увидеть посетители.'
-                                    }
+                                    return createMsg('Метакатегория ' + '\"' + result.Title + '\"' + ' успешно сохранена!', 'Теперь ее смогут увидеть посетители.');
                                 }
-                            },
-                            {
-                                messageBuilder: createDefaultErrorMessageBuilder()
                             });
                     };
 
                     $scope.deleteMetacategory = function (metacategoryID) {
-                        ajaxRequestMaker(
-                            metacategoryID,
-                            'DELETE',
-                            null,
-                            {
-                                messageBuilder: createMessageBuilder('Удалено!', 'Метакатегория удалена, больше ее никто не увидит.')
-                            },
-                            {
-                                messageBuilder: createDefaultErrorMessageBuilder()
-                            });
-                    }
+                        ajaxMonad.delete('api/metacategories/' + metacategoryID);
+                    };
                 });
         });
     </script>
