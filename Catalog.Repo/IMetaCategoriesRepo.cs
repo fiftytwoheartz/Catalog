@@ -41,7 +41,7 @@ namespace Catalog.Repo
 		public Task<ResponseBuilder> Register(MetaCategory metaCategory) {
             metaCategory.ID = _DB.Count;
 			_DB.Add(_DB.Count, metaCategory);
-			return Task.FromResult($"'{metaCategory.Title}' registered successfully.".Success());
+			return Task.FromResult(metaCategory.Success());
 		}
 
 		public Task<ResponseBuilder> Unregiester(int ID)
