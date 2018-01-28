@@ -1,16 +1,96 @@
-﻿
-@{
-    ViewBag.Title = "Index";
+﻿@{
+ViewBag.Title = "Index";
 }
 
 <h2>Администирование</h2>
 
 <button data-toggle="collapse" data-target="#metacategories-management" class="btn btn-link">Управление мета-категориями</button>
 <div id="metacategories-management" class="collapse">
-        <button data-toggle="collapse" data-target="#metacategories-management-create" class="btn btn-link">Создать новую мета-категорию</button>
-        <div id="metacategories-management-create" class="collapse">
-            <p>
-                Создание новой мета-категории.
-            </p>
-        </div>
+    <div ng-app="myApp" ng-controller="myCtrl">
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <input type="text" class="form-control" placeholder="название новой метакатегории" id="metacategory-create-title" />
+                    </td>
+                    <td>
+                        <textarea class="form-control" rows="3" cols="20" placeholder="описание новой метакатегории" id="metacategory-create-description"></textarea>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-success btn-sm" ng-click="createMetacategory()">
+                            <span class="glyphicons glyphicons-floppy-save"></span> создать новую метакатегорию
+                        </a>
+                    </td>
+                </tr>
+            <tr ng-repeat="metacategory in metacategories" id="{{ 'metacategory-' + metacategory.ID }}">
+                <td>
+                    <input type="text" class="form-control" value="{{ metacategory.Title | uppercase }}"/>
+                </td>
+                <td>
+                    <textarea class="form-control" rows="3" cols="20" placeholder="описание новой метакатегории">{{ metacategory.Description }}</textarea>
+                </td>
+                <td>
+                <td>
+                    <a href="#" class="btn btn-success btn-sm">
+                        <span class="glyphicons glyphicons-floppy-save"></span> сохранить изменения
+                    </a>
+                    <a href="#" class="btn btn-danger btn-sm" ng-click="deleteMetacategory(metacategory.ID)">
+                        <span class="glyphicons glyphicons-remove"></span> удалить
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+            var app = angular.module('myApp', []);
+            app.controller('myCtrl', function($scope, $http) {
+                $http
+                    .get("http://localhost:58798/api/metacategories/")
+                    .then(function (response) {
+                        console.log('reloaded metacategories');
+                        console.log(response.data.Data);
+                        $scope.metacategories = response.data.Data;
+
+                        $scope.createMetacategory = function () {
+                            var metacategory = {
+                                Title: $('#metacategory-create-title').val(),
+                                Description: $('#metacategory-create-description').val()
+                            };
+                            $.ajax({
+                                url: "http://localhost:58798/api/metacategories/",
+                                type: 'POST',
+                                data: metacategory,
+                                success: function (result) {
+                                    console.log('created');
+                                    console.log(result);
+                                }
+                            });
+                        };
+
+                        $scope.deleteMetacategory = function (metacategoryID) {
+                            console.log('Call to deleteMetacategory(), ID=' + metacategoryID);
+                            $.ajax({
+                                url: "http://localhost:58798/api/metacategories/" + metacategoryID,
+                                type: 'DELETE',
+                                success: function (result) {
+                                    if (result.Success) {
+                                        console.log('deleteing metacategory of ID=' + metacategoryID);
+                                        $('metacategory-' + metacategoryID).remove();
+                                    }
+                                }
+                            });
+                        }
+                    });
+            });
+            </script>
 </div>

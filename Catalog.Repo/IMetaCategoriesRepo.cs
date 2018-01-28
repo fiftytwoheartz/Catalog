@@ -38,8 +38,8 @@ namespace Catalog.Repo
 			return Task.FromResult(_DB.Values.Success());
 		}
 
-		public Task<ResponseBuilder> Register(MetaCategory metaCategory)
-		{
+		public Task<ResponseBuilder> Register(MetaCategory metaCategory) {
+            metaCategory.ID = _DB.Count;
 			_DB.Add(_DB.Count, metaCategory);
 			return Task.FromResult($"'{metaCategory.Title}' registered successfully.".Success());
 		}
