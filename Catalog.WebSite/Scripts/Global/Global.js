@@ -1,7 +1,29 @@
 ﻿var successCls = 'alert alert-success';
-var failureCls = 'alert alert-error';
+var failureCls = 'alert alert-danger';
+
+// core module
+function notNull(nullValue) {
+    return function (value) {
+        return {
+            object: object,
+            map: function (func) {
+                var res = func(value);
+                if (res == null) {
+                    return notNull(nullValue);
+                }
+                return res;
+            }
+        };
+    };
+}
 
 // user notification
+function createMsg(title, body) {
+    return { title: title, body: body };
+}
+var defaultSuccessMsg = createMsg('Успех!', 'Все прошло хорошо, можно продолжать работу.');
+var defaultFailureMsg = createMsg('Ошибка! ;(', 'Что-то пошло не так...');
+
 function show(cls, message) {
     var notificator = $("#notificator-container");
     notificator.html(
@@ -24,69 +46,60 @@ function show(cls, message) {
             });
 }
 function showSuccess(message) {
+    if (message == null) {
+        message = defaultSuccessMsg;
+    }
     show(successCls, message);
 }
 function showFailure(message) {
+    if (message == null) {
+        message = defaultFailureMsg;
+    }
     show(failureCls, message);
 }
-function showFailure() {
-    showFailure({ title: 'Произошла ошибка ;(', body: 'Что-то пошло не так...' });
-}
 
-// ajax to the WEB API module
-function createMsg(title, body) {
-    return { title: title, body: body };
-}
-var defaultSuccessMsg = createMsg('Успех!', 'Все прошло хорошо, можно продолжать работу.');
-var defaultFailureMsg = createMsg('Ошибка! ;(', 'Что-то пошло не так...');
 
-function processResultAs(result, successOrFailure) {
-    if (successOrFailure != null && successOrFailure.messageBuilder != null) {
-        showSuccess(successOrFailure.messageBuilder(result.Data));
-    } else {
-        showSuccess(defaultSuccessMsg);
-    }
-
-    if (successOrFailure != null && successOrFailure.callback != null) {
-        successOrFailure.callback(result.Data);
-    }
-}
-
-function process(result) {
-    return {
-        as: function(obj) {
-            processResultAs(obj, result);
-        }
-    };
-}
-
-function curryHostAndHttpVerb(hostUrl, httpVerb) {
-    return function (relativeUrl, data, success, failure) {
-        $.ajax({
-            url: hostUrl + relativeUrl,
-            type: httpVerb,
-            data: data,
-            success: function (result) {
-                if (result.Success) {
-                    process(result).as(success);
+// ajax to WEB API module
+function makeRequest(hostUrl, httpVerb) {
+    return function (
+        relativeUrl,
+        successMessageFormatter = function (_) { showSuccess(defaultSuccessMsg); },
+        failureMessageFormatter = function (_) { showFailure(defaultFailureMsg); },
+        successCallback = function (_) { },
+        failureCallback = function (_) { },
+        errorCallback = function () { }) {
+        return function (data) {
+            $.ajax({
+                url: hostUrl + relativeUrl,
+                type: httpVerb,
+                data: data,
+                success: function (result) {
+                    // this part relies on the WEB API contract:
+                    // there should be .Success as a confirmation from each and every request
+                    if (result.Success) {
+                        showSuccess(successMessageFormatter(result));
+                        successCallback(result);
+                    }
+                    else {
+                        showFailure(failureMessageFormatter(result));
+                        failureCallback(result);
+                    }
+                },
+                error: function () {
+                    showFailure(failureMessageFormatter({}));
+                    errorCallback();
                 }
-                else {
-                    process(result).as(failure);
-                }
-            },
-            failure: function () {
-                showFailure(defaultFailureMsg);
-            }
-        });
+            });
 
-        return createAjaxMonad(hostUrl);
-    };
+            return createAjaxMonad(hostUrl);
+        };
+    }
 }
 
 function createAjaxMonad(hostUrl) {
     return {
-        post: curryHostAndHttpVerb(hostUrl, 'POST'),
-        delete: curryHostAndHttpVerb(hostUrl, 'DELETE')
+        post: makeRequest(hostUrl, 'POST'),
+        delete: makeRequest(hostUrl, 'DELETE')
     };
 }
 
@@ -136,6 +149,7 @@ function createValidator(failWith, approve) {
             if (this.isValid) {
                 func(this.value);
             }
+            return this;
         }
     };
 }
@@ -175,11 +189,11 @@ var predicates = {
     string: {
         longerThan: function(limitExclusive) {
             return pairPredicate(function(value) { return value.length > limitExclusive })
-                    .withMessage("Минимальная длина строки: " + limitExclusive + " символ(а).");
+                    .withMessage("Минимальная длина строки: " + (limitExclusive + 1) + " символ(а).");
         },
         shorterThan: function (limitExclusive) {
             return pairPredicate(function (value) { return value.length < limitExclusive })
-                .withMessage("Максимальная длина строки: " + limitExclusive + " символ(а).");
+                .withMessage("Максимальная длина строки: " + (limitExclusive - 1) + " символ(а).");
         }
     }
 };

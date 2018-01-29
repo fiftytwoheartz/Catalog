@@ -29,7 +29,7 @@
                 </tr>
                 <tr ng-repeat="metacategory in metacategories" id="{{ 'metacategory-' + metacategory.ID }}">
                     <td>
-                        <input type="text" class="form-control" value="{{ metacategory.Title | uppercase }}" />
+                        <input type="text" class="form-control" value="{{ metacategory.Title | uppercase }}" id="{{ 'metacategory-title-' + metacategory.ID }}" />
                     </td>
                     <td>
                         <textarea class="form-control" rows="3" cols="20" placeholder="описание новой метакатегории">{{ metacategory.Description }}</textarea>
@@ -53,25 +53,24 @@
             $http
                 .get("http://localhost:58798/api/metacategories/")
                 .then(function (response) {
-
                     $scope.metacategories = response.data.Data;
-
                     $scope.createMetacategory = function () {
-                        ajaxMonad.post(
-                            'api/metacategories/',
-                            {
-                                Title: $('#metacategory-create-title').val(),
-                                Description: $('#metacategory-create-description').val()
-                            },
-                            {
-                                messageBuilder: function (result) {
-                                    return createMsg('Метакатегория ' + '\"' + result.Title + '\"' + ' успешно сохранена!', 'Теперь ее смогут увидеть посетители.');
-                                }
-                            });
+                        defaultValidator
+                            .get()
+                            .validate("#metacategory-create-title", 'title', predicates.string.longerThan(0))
+                            .validate("#metacategory-create-description", 'description', predicates.string.longerThan(0))
+                            .apply(ajaxMonad.post(
+                                'api/metacategories/',
+                                function (result) {
+                                    return createMsg('Метакатегория ' + '\"' + result.Data.Title + '\"' + ' успешно сохранена!', 'Теперь ее смогут увидеть посетители.');
+                                },
+                                undefined,
+                                function (result) {
+                                    alert('alert!');
+                                }));
                     };
-
                     $scope.deleteMetacategory = function (metacategoryID) {
-                        ajaxMonad.delete('api/metacategories/' + metacategoryID);
+                        ajaxMonad.delete('api/metacategories/' + metacategoryID)({});
                     };
                 });
         });
