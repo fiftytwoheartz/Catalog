@@ -13,13 +13,15 @@ function show(cls, message) {
         message.body +
         "</p>");
     notificator.addClass(cls);
-    notificator.animate({
-        opacity: .0,
-    }, 4000, function () {
-        notificator.removeClass(cls);
-        notificator.empty();
-        notificator.removeAttr('style');
-    });
+    notificator
+        .animate(
+            { opacity: .0 },
+            4000,
+            function () {
+                notificator.removeClass(cls);
+                notificator.empty();
+                notificator.removeAttr('style');
+            });
 }
 
 function showSuccess(message) {
@@ -31,7 +33,7 @@ function showFailure(message) {
 }
 
 function showFailure() {
-    showFailure({title : 'Произошла ошибка ;(', body : 'Что-то пошло не так...'})
+    showFailure({ title: 'Произошла ошибка ;(', body: 'Что-то пошло не так...' });
 }
 
 /* ajax WEB API */
