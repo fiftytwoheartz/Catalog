@@ -93,30 +93,48 @@ function createAjaxMonad(hostUrl) {
 var ajaxMonad = createAjaxMonad('http://localhost:58798/');
 
 // validation module
-function validate(selector, predicate) {
-    var element = $(selector);
-    if (element == null) {
-        return false;
-    }
-    return predicate(element.val());
+function pairPredicate(predicate) {
+    return {
+        withMessage: function(message) {
+            return {
+                isTrue: predicate,
+                message: message,
+                and: function (rpredicate) {
+                    return and(this, rpredicate);
+                }
+            };
+        }
+    };
 }
+function and(lpredicate, rpredicate) {
+    return pairPredicate(function (value) { return lpredicate.isTrue(value) && rpredicate.isTrue(value); })
+        .withMessage(lpredicate.message + ' --[OR]-- ' + rpredicate.message);
+}
+
 function createValidator(failWith, approve) {
     return {
+        value: {},
         isValid: true,
         failWith: failWith,
         approve: approve,
-        validate: function(selector, predicate, message) {
-            if (validate(selector, predicate)) {
+        validate: function (selector, propertyName, predicate) {
+            var elementValue = $(selector).val();
+            var withNotNullPredicate = predicate.and(pairPredicate(function (value) { return value != null }).withMessage("Can't be null."));
+            if (withNotNullPredicate.isTrue(elementValue)) {
+                if (this.isValid) {
+                    this.value[propertyName] = elementValue;
+                }
                 approve(selector);
             } else {
                 this.isValid = false;
-                failWith(selector, message);
+                this.value = {};
+                failWith(selector, withNotNullPredicate.message);
             }
             return this;
         },
-        runIfIsValid: function(action) {
+        apply: function(func) {
             if (this.isValid) {
-                action();
+                func(this.value);
             }
         }
     };
@@ -151,3 +169,17 @@ var defaultValidator = {
             });
     }
 }
+
+// predicates
+var predicates = {
+    string: {
+        longerThan: function(limitExclusive) {
+            return pairPredicate(function(value) { return value.length > limitExclusive })
+                    .withMessage("Минимальная длина строки: " + limitExclusive + " символ(а).");
+        },
+        shorterThan: function (limitExclusive) {
+            return pairPredicate(function (value) { return value.length < limitExclusive })
+                .withMessage("Максимальная длина строки: " + limitExclusive + " символ(а).");
+        }
+    }
+};
