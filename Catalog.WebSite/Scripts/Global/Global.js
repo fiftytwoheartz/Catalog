@@ -23,15 +23,12 @@ function show(cls, message) {
                 notificator.removeAttr('style');
             });
 }
-
 function showSuccess(message) {
     show(successCls, message);
 }
-
 function showFailure(message) {
     show(failureCls, message);
 }
-
 function showFailure() {
     showFailure({ title: 'Произошла ошибка ;(', body: 'Что-то пошло не так...' });
 }
@@ -103,7 +100,6 @@ function validate(selector, predicate) {
     }
     return predicate(element.val());
 }
-
 function createValidator(failWith, approve) {
     return {
         isValid: true,

@@ -25,7 +25,8 @@
     $(selector).change(function() {
         defaultValidator
             .get()
-            .validate('#input', function(value) { return value.length > 5; }, 'Too short!')
+            .validate('#input', function (value) { return value.length > 5; }, 'Too short!')
+            .validate ('#input', function(value) { return value.length < 25 }, 'Too long!')
             .runIfIsValid(function() { alert('Valid!') });
     });
 </script>
