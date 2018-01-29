@@ -1,6 +1,7 @@
 ﻿var successCls = 'alert alert-success';
 var failureCls = 'alert alert-error';
 
+// user notification
 function show(cls, message) {
     var notificator = $("#notificator-container");
     notificator.html(
@@ -33,7 +34,7 @@ function showFailure() {
     showFailure({title : 'Произошла ошибка ;(', body : 'Что-то пошло не так...'})
 }
 
-/* WEB API */
+/* ajax WEB API */
 function createMsg(title, body) {
     return { title: title, body: body };
 }
@@ -91,3 +92,49 @@ function createAjaxMonad(hostUrl) {
 }
 
 var ajaxMonad = createAjaxMonad('http://localhost:58798/');
+
+function createValidationResult(isValid, message) {
+    return { isValid: isValid, message: message };
+}
+
+function createFailedValidationResult(message) {
+    return createValidationResult(false, message);
+}
+
+function createSuccessfulValidationResult() {
+    return createValidationResult(true, null);
+}
+
+// validation
+function createValidationMonad() {
+    return {
+        memory: [],
+        validate: function(value, validationRules) {
+            if (value == null) {
+                this.memory.push({
+                    validationResult: createFailedValidationResult('Null.'),
+                    data: null
+                });
+                return this;
+            } else {
+                for (var i = 0; i < validationRules.length; i++) {
+                    var currentValidationRule = validationRules[i];
+                    if (!currentValidationRule.validate(value)) {
+                        this.memory.push({
+                            validationResult: createFailedValidationResult(currentValidationRule.message),
+                            data: value
+                        });
+                        return this;
+                    }
+                };
+
+                this.memory.push({
+                    validationResult: createSuccessfulValidationResult(),
+                    data: value
+                });
+
+                return this;
+            }
+        }
+    };
+}
