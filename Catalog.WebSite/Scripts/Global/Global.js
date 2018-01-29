@@ -5,10 +5,12 @@ function show(cls, message) {
     var notificator = $("#notificator-container");
     notificator.html(
         "<p>" +
-        "<strong>" + message.title + "</strong>" +
+        "<strong>" +
+        message.title +
+        "</strong>" +
         "<hr />" +
         message.body +
-        "</p>")
+        "</p>");
     notificator.addClass(cls);
     notificator.animate({
         opacity: .0,
@@ -37,6 +39,27 @@ function createMsg(title, body) {
 }
 var defaultSuccessMsg = createMsg('Успех!', 'Все прошло хорошо, можно продолжать работу.');
 var defaultFailureMsg = createMsg('Ошибка! ;(', 'Что-то пошло не так...');
+
+function processResultAs(result, successOrFailure) {
+    if (successOrFailure != null && successOrFailure.messageBuilder != null) {
+        showSuccess(successOrFailure.messageBuilder(result.Data));
+    } else {
+        showSuccess(defaultSuccessMsg);
+    }
+
+    if (successOrFailure != null && successOrFailure.callback != null) {
+        successOrFailure.callback(result.Data);
+    }
+}
+
+function process(result) {
+    return {
+        as: function(obj) {
+            processResultAs(obj, result);
+        }
+    };
+}
+
 function curryHostAndHttpVerb(hostUrl, httpVerb) {
     return function (relativeUrl, data, success, failure) {
         $.ajax({
@@ -45,26 +68,10 @@ function curryHostAndHttpVerb(hostUrl, httpVerb) {
             data: data,
             success: function (result) {
                 if (result.Success) {
-                    if (success != null && success.messageBuilder != null) {
-                        showSuccess(success.messageBuilder(result.Data));
-                    } else {
-                        showSuccess(defaultSuccessMsg);
-                    }
-
-                    if (success != null && success.callback != null) {
-                        success.callback(result.Data);
-                    }
+                    process(result).as(success);
                 }
                 else {
-                    if (failure != null && failure.messageBuilder != null) {
-                        showFailure(failure.messageBuilder(result.Data));
-                    } else {
-                        showFailure(defaultFailureMsg);
-                    }
-
-                    if (failure != null && failure.callback != null) {
-                        failure.callback(result.Data);
-                    }
+                    process(result).as(failure);
                 }
             },
             failure: function () {
