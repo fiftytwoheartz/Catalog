@@ -36,7 +36,7 @@ function showFailure() {
     showFailure({ title: 'Произошла ошибка ;(', body: 'Что-то пошло не так...' });
 }
 
-/* ajax WEB API */
+// ajax to the WEB API module
 function createMsg(title, body) {
     return { title: title, body: body };
 }
@@ -95,48 +95,63 @@ function createAjaxMonad(hostUrl) {
 
 var ajaxMonad = createAjaxMonad('http://localhost:58798/');
 
-function createValidationResult(isValid, message) {
-    return { isValid: isValid, message: message };
+// validation module
+function validate(selector, predicate) {
+    var element = $(selector);
+    if (element == null) {
+        return false;
+    }
+    return predicate(element.val());
 }
 
-function createFailedValidationResult(message) {
-    return createValidationResult(false, message);
-}
-
-function createSuccessfulValidationResult() {
-    return createValidationResult(true, null);
-}
-
-// validation
-function createValidationMonad() {
+function createValidator(failWith, approve) {
     return {
-        memory: [],
-        validate: function(value, validationRules) {
-            if (value == null) {
-                this.memory.push({
-                    validationResult: createFailedValidationResult('Null.'),
-                    data: null
-                });
-                return this;
+        isValid: true,
+        failWith: failWith,
+        approve: approve,
+        validate: function(selector, predicate, message) {
+            if (validate(selector, predicate)) {
+                approve(selector);
             } else {
-                for (var i = 0; i < validationRules.length; i++) {
-                    var currentValidationRule = validationRules[i];
-                    if (!currentValidationRule.validate(value)) {
-                        this.memory.push({
-                            validationResult: createFailedValidationResult(currentValidationRule.message),
-                            data: value
-                        });
-                        return this;
-                    }
-                };
-
-                this.memory.push({
-                    validationResult: createSuccessfulValidationResult(),
-                    data: value
-                });
-
-                return this;
+                this.isValid = false;
+                failWith(selector, message);
+            }
+            return this;
+        },
+        runIfIsValid: function(action) {
+            if (this.isValid) {
+                action();
             }
         }
     };
+}
+
+// relies on the fact that each input is wrapped into a separate parent container,
+// typically 'div' to give room for error message
+var invalidCls = 'alert alert-danger';
+var validCls = 'alert alert-success';
+var defaultValidator = {
+    get: function () {
+        return createValidator(
+            function(selector, message) {
+                var element = $(selector);
+                element.removeClass(validCls);
+                element.addClass(invalidCls);
+
+                var elementParent = element.parent();
+                var errorMessageElement = elementParent.find('small');
+                if (errorMessageElement.length === 0) {
+                    elementParent.append('<small class="text-danger">' + message + '</small>');
+                }
+            },
+            function(selector) {
+                var element = $(selector);
+                element.removeClass(invalidCls);
+                element.addClass(validCls);
+                var errorMessageElement = element.parent().find('small');
+                if (errorMessageElement != null) {
+                    errorMessageElement.remove();
+                }
+            });
+    }
 }

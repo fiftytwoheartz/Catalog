@@ -4,6 +4,10 @@
 <h2>@ViewBag.Title.</h2>
 <h3>@ViewBag.Message</h3>
 
+<div>
+    <input id="input" placeholder="Value goes here..." />
+</div>
+
 <address>
     One Microsoft Way<br />
     Redmond, WA 98052-6399<br />
@@ -15,3 +19,13 @@
     <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@example.com</a><br />
     <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
 </address>
+
+<script>
+    var selector = '#input';
+    $(selector).change(function() {
+        defaultValidator
+            .get()
+            .validate('#input', function(value) { return value.length > 5; }, 'Too short!')
+            .runIfIsValid(function() { alert('Valid!') });
+    });
+</script>
