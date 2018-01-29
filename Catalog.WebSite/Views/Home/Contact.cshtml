@@ -5,7 +5,9 @@
 <h3>@ViewBag.Message</h3>
 
 <div>
-    <input id="input" placeholder="Value goes here..." />
+    <input id="input1" placeholder="First goes here..." />
+    <input id="input2" placeholder="Second goes here..." />
+    <a href="#" id="confirm">confirm</a>
 </div>
 
 <address>
@@ -21,13 +23,17 @@
 </address>
 
 <script>
-    var selector = '#input';
-    $(selector).change(function() {
+    var selector = '#confirm';
+    $(selector).click(function() {
         defaultValidator
             .get()
             .validate(
-                '#input',
-                'myProperty',
+                '#input1',
+                'myProperty1',
+                predicates.string.longerThan(3).and(predicates.string.shorterThan(10)))
+            .validate(
+                '#input2',
+                'myProperty2',
                 predicates.string.longerThan(3).and(predicates.string.shorterThan(10)))
             .apply(console.log);
     });
